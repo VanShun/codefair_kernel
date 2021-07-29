@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Codefair WOKOO pinctrl drivers
+#
+
+config PINCTRL_WOKOO
+	bool "WOKOO pins driver"
+	depends on OF && (ARCH_WOKOO || COMPILE_TEST)
+	select PINMUX
+	select GENERIC_PINCONF
+	default ARCH_WOKOO
+	help
+	  Say yes here to enable the Broadcom NS SoC pins driver.
+
+	  The Codefair WOKOO pins driver supports muxing multi-purpose pins
+	  that can be used for various functions (e.g. SPI, I2C, UART) as well
+	  as GPIOs.
+
+config PINCTRL_WOKOO_MUX
+	bool "WOKOO pinmux driver"
+	depends on OF
+	depends on ARCH_WOKOO || COMPILE_TEST
+	select PINMUX
+	select GENERIC_PINCONF
+	default ARCH_WOKOO
+	help
+	  Say yes here to enable the Codefair WOKOO MUX driver.
+
+	  The Codefair WOKOO IOMUX driver supports group based IOMUX
+	  configuration.

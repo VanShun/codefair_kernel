@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+config SND_I2S_WOKOO_I2S
+	tristate "wokoo I2S controller"
+	depends on ARCH_WOKOO
+	depends on COMMON_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	help
+	  wokoo I2S
+

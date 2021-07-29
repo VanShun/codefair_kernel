@@ -1,0 +1,62 @@
+
+h
+loadbin "C:\hlh_workspace\load\u-boot.bin" 0x1E00000
+setpc 0x1E00000
+go
+
+
+loadbin "C:\hlh_workspace\load\uImage.bin" 0x8000
+loadbin "C:\hlh_workspace\load\ramdiskfs.gz.bin" 0x400000
+loadbin "C:\hlh_workspace\load\u-boot.dtb.bin" 0x1F00000
+go
+
+
+bootm 0x8000 0x400000 0x1f00000
+
+mount -t configfs none /sys/kernel/config
+cd /sys/kernel/config/usb_gadget
+mkdir gadget
+cd gadget
+echo "0x0200"> bcdUSB
+echo "0x525"  > idVendor
+echo "0xa4ad" > idProduct
+mkdir strings/0x409
+echo "mkelehk"  > strings/0x409/manufacturer
+echo "keyboard"  > strings/0x409/product
+echo 76543210  > strings/0x409/serialnumber
+mkdir configs/config.1
+echo 120 > configs/config.1/MaxPower
+mkdir configs/config.1/strings/0x409
+echo "hid" >   configs/config.1/strings/0x409/configuration
+mkdir functions/hid.0
+echo 0 > functions/hid.0/subclass
+echo 1 > functions/hid.0/protocol
+echo 8 > functions/hid.0/report_length
+echo -ne \\x5\\x1\\x9\\x6\\xa1\\x1\\x5\\x7\\x19\\xe0\\x29\\xe7\\x15\\x0\\x25\\x1\\x75\\x1\\x95\\x8\\x81\\x2\\x95\\x1\\x75\\x8\\x81\\x3\\x95\\x5\\x75\\x1\\x5\\x8\\x19\\x1\\x29\\x5\\x91\\x2\\x95\\x1\\x75\\x3\\x91\\x3\\x95\\x6\\x75\\x8\\x15\\x0\\x25\\x65\\x5\\x7\\x19\\x0\\x29\\x65\\x81\\x0\\xc0> functions/hid.0/report_desc
+ln -s functions/hid.0 configs/config.1
+echo "a0300000.usb" > UDC
+
+
+
+mount -t configfs none /sys/kernel/config
+cd /sys/kernel/config
+cd usb_gadget
+mkdir g1
+cd g1
+echo "0x0200"> bcdUSB
+echo "0x525"  > idVendor
+echo "0xa4a7" > idProduct
+mkdir strings/0x409
+echo "0123456789ABCDEF" > strings/0x409/serialnumber
+echo "Master"  > strings/0x409/manufacturer
+echo "Demo"  > strings/0x409/product
+mkdir configs/c.1
+echo 120 > configs/c.1/MaxPower
+mkdir configs/c.1/strings/0x409
+echo "ECM" > configs/c.1/strings/0x409/configuration
+mkdir functions/acm.GS0
+ln -s functions/acm.GS0 configs/c.1
+echo "a0300000.usb" > UDC
+
+
+

@@ -1,0 +1,455 @@
+/*
+ * Copyright (c) 2020 Codefair Semiconductor Technology Co., Ltd.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include <dt-bindings/clock/wokoo-clock.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include "skeleton.dtsi"
+
+/ {
+
+	interrupt-parent = <&intc>;
+
+	aliases {
+		serial0 = &uart0;
+		serial1 = &uart1;
+		serial2 = &uart2;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		spi0 = &qspi;
+		spi1 = &ssi;
+		usb0 = &usb_otg;
+		i2s0 = &i2s0;
+		i2s1 = &i2s1;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-a7";
+			device_type = "cpu";
+			reg = <0>;
+			clock-latency = <61036>; /* two CLK32 periods */
+
+			clocks = <&clks WOKOO_SCLK_A7>,
+				 <&clks WOKOO_CLK_PLLOUT>,
+				 <&clks WOKOO_SCLK_A7_AXI>;
+			clock-names = "a7", "pll", "a7_axi";
+		};
+	};
+
+	intc: interrupt-controller@a6001000 {
+		compatible = "arm,gic-400", "arm,cortex-a7-gic";
+		interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_HIGH)>;
+		#interrupt-cells = <3>;
+		interrupt-controller;
+		reg = <0xa6001000 0x1000>,
+			  <0xa6002000 0x2000>,
+			  <0xa6004000 0x2000>,
+			  <0xa6006000 0x2000>;
+	};
+
+	timer {
+		compatible = "arm,armv7-timer";
+		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
+					<GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
+					<GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
+					<GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>;
+	};
+
+	osc32k: clock-osc32k {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+		clock-output-names = "osc32k";
+	};
+
+	osc16m: clock-osc16m {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <16000000>;
+		clock-output-names = "osc16m";
+	};
+
+	apt0: apt@0a0149000 {
+		compatible = "wokoo,wokoo-apt", "wokoo,wokoo-apt";
+		reg = <0x0a0149000 0x400>;
+		interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_SCLK_TIMER0_BUS>,
+			 <&clks WOKOO_PCLK_TIMER>;
+		clock-names = "sclk", "pclk";
+		status = "disabled";
+	};
+
+	uart0: serial@a0144000 {
+		compatible = "wokoo,wokoo-uart";
+		reg = <0xa0144000 0x1000>;
+		interrupts = <GIC_SPI 35 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_SCLK_UART0>,
+			 <&clks WOKOO_PCLK_UART0>;
+		clock-names = "sclk", "pclk";
+	};
+
+	uart1: serial@a0145000 {
+		compatible = "wokoo,wokoo-uart";
+		reg = <0xa0145000 0x1000>;
+		interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_SCLK_UART1>,
+			 <&clks WOKOO_PCLK_UART1>;
+		clock-names = "sclk", "pclk";
+		uart-has-rtscts;
+		status = "disabled";
+	};
+
+	uart2: serial@a0146000 {
+		compatible = "wokoo,wokoo-uart";
+		reg = <0xa0146000 0x1000>;
+		interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_SCLK_UART2>,
+			 <&clks WOKOO_PCLK_UART2>;
+		clock-names = "sclk", "pclk";
+		uart-has-rtscts;
+		status = "disabled";
+	};
+
+	i2c0: i2c@a0142000 {
+			#address-cells = <0>;
+			#size-cells = <1>;
+			compatible = "wokoo,wokoo-i2c";
+			reg = <0xa0142000 0x400>;
+			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks WOKOO_SCLK_I2C0>,//0X100
+			     <&clks WOKOO_MCLK_I2C0>,//0XC4
+				 <&clks WOKOO_PCLK_I2C0>;//0XB4
+			clock-names = "sclk", "mclk", "pclk";
+			clock-frequency = <100000>;
+			status = "disabled";
+	};
+
+	i2c1: i2c@a0141000 {
+		#address-cells = <0>;
+		#size-cells = <1>;
+		compatible = "wokoo,wokoo-i2c";
+		reg = <0xa0141000 0x400>;
+		interrupts =<GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_SCLK_I2C1>,
+			 <&clks WOKOO_MCLK_I2C1>,
+			 <&clks WOKOO_PCLK_I2C1>;
+		clock-names = "sclk", "mclk", "pclk";
+		clock-frequency = <100000>;
+		status = "disabled";
+	};
+
+	csi0: csi@a0180000 {
+		compatible = "allwinner,sun7i-a20-csi0";
+		reg = <0xa0180000 0x40000>,
+				<0xa0060260 0x28>; 
+		interrupts = <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_CLK_ISP_AXI>,
+				 <&clks WOKOO_SCLK_ISP_2>,
+				 <&clks WOKOO_CLK_CPHY_CFG>,
+				 <&clks WOKOO_SCLK_LVDS_IDSP>,
+				 <&clks WOKOO_HCLK_ISP_EN>,
+				 <&clks WOKOO_SCLK_ISP_P_EN>,
+				 <&clks WOKOO_PCLK_ISP>,
+				 <&clks WOKOO_CLK_OUT1_BUS>,
+				 <&clks WOKOO_CLK_OUT2_BUS>;
+		clock-names = "axiclk", "psclk", "phyclk", "idspclk", "hclk", "isppclk", "pclk","clkout1_bus_clk","clkout2_bus_clk";
+		resets = <&clks WOKOO_RST_ISP_AHB>,<&clks WOKOO_RST_ISP_P>;
+		reset-names = "resetahb","resetp";
+		senser-type = "dvp";//mipi2 dvp mipi
+		senser-name = "sc031mipi";
+		status = "disabled";
+	};
+
+	wdog1: wdog@a0148000 {
+		compatible = "wokoo,wokoo-wdt";
+		reg = <0xa0148000 0x400>;
+		interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_PCLK_WDT0>,
+				<&clks WOKOO_PCLK_CTL_WORK>;
+		clock-names = "pclk", "sclk";
+	};
+
+	rtc: rtc@a0156000 {
+		compatible = "wokoo,wokoo-rtc";
+		reg = <0xa0156000 0x400>;
+		interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_PCLK_RTC>;
+		clock-names = "rtc";
+	};
+
+	fb: fb@a0400000 {
+		compatible = "wokoo,wokoo-fb";
+		reg = <0xa0400000 0x8000>;	
+		interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_LCDC>,
+				<&clks WOKOO_SCLK_LCDC_AXI>,
+				<&clks WOKOO_SCLK_LCDC0>;
+		resets = <&clks WOKOO_RST_DISPLAY>;
+		reset-names = "reset";
+				
+		clock-names = "lcdc","axi","mclk";
+		status="disabled";
+	};
+
+	qspi: qspi@0xa014e000 {
+		compatible = "wokoo,wokoo-qspi";
+		#address-cells = <0>;
+		#size-cells = <1>;
+		reg = <0xa014e000 0x400>;
+		interrupts = <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_PCLK_QSPI>;
+		clock-names = "pclk";
+		dmas = <&dma 0 1 0x400 0x0>;
+		dma-names = "rx";
+	};
+
+	ssi: ssi@a0143000 {
+		compatible = "wokoo,wokoo-ssi";
+		#address-cells = <0>;
+		#size-cells = <1>;
+		reg = <0xa0143000 0x400>;
+		interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_PCLK_SSI0>,
+			 <&clks WOKOO_SCLK_SSI0_GR>,
+			 <&clks WOKOO_SCLK_SSI0>,
+			 <&clks WOKOO_SCLK_SSI1_GR>,
+			 <&clks WOKOO_SCLK_SSI1>;
+		clock-names = "ssi0_pclk", "ssi0_gr_clk", "ssi0_clk", "ssi1_gr_clk", "ssi1_clk";
+		resets = <&clks WOKOO_RST_SSI0>;
+		reset-names = "reset";
+		status = "disabled";
+	};
+
+	i2s0: i2s0@a0140000 {
+		compatible = "wokoo,wokoo-i2s";
+		#sound-dai-cells = <0>;
+		clocks = <&clks WOKOO_PCLK_I2S0>,
+			<&clks WOKOO_SCLK_I2S0>,
+			<&clks WOKOO_SCLK_I2S0_GR>;
+		clock-names = "i2s_pclk", "i2s_sclk", "i2s_gr_clk";
+		reg = <0xa0140000 0x400>;
+		interrupts = <GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	i2s1: i2s1@a014c000 {
+		compatible = "wokoo,wokoo-i2s";
+		#sound-dai-cells = <0>;
+		clocks = <&clks WOKOO_PCLK_I2S1>,
+			<&clks WOKOO_SCLK_I2S1>,
+			<&clks WOKOO_SCLK_I2S1_GR>;
+		clock-names = "i2s_pclk", "i2s_sclk", "i2s_gr_clk";
+		reg = <0xa0140000 0x400>;
+		interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+	};
+
+	clks: ccm@a0151000 {
+		compatible = "wokoo,wokoo-clks";
+		reg = <0xa0151000 0x400>;
+		#clock-cells = <1>;
+		#reset-cells = <1>;
+		clocks = <&osc32k>, <&osc16m>;
+		clock-names = "osc32k", "osc16m";
+	};
+
+	memctl: memctl@a0152000 {
+		compatible = "wokoo,wokoo-memctl";
+		reg = <0xa0152000 0x800>;
+	};
+
+	memphy: memphy@a0154000 {
+		compatible = "wokoo,wokoo-memphy";
+		reg = <0xa0154000 0x400>;
+	};
+
+	mempwr: mempwr@a0155000 {
+		compatible = "wokoo,wokoo-mempwr";
+		reg = <0xa0155000 0x400>;
+	};
+
+	ocram: sram@9ff90000 {
+		compatible = "mmio-sram";
+		reg = <0x9ff90000 0x8000>;
+	};
+
+	reset: reset@a01511a4 {
+		compatible = "wokoo,wokoo-reset";
+		reg = <0xa01511a4 0x20>;
+		#reset-cells = <1>;
+	};
+
+	pinctrl: pinctrl@a0153000 {
+		compatible = "wokoo,wokoo-pinmux";
+		reg = <0xa0153000 0x400>;
+		clocks = <&clks WOKOO_PCLK_MUXPIN>;
+		clock-names = "pclk";
+	};
+
+	gpio0: gpio0@a014a000 {
+		compatible = "wokoo,wokoo-gpio0";
+		reg = <0xa014a000 0x400>;
+		#gpio-cells = <2>;
+		gpio-controller;
+		ngpios = <128>;
+		interrupts = <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>;
+		gpio-ranges = <&pinctrl 0 0 128>;
+		clocks = <&clks WOKOO_PCLK_GPIO0>;
+		clock-names = "pclk";
+	};
+
+	dma: dma-controller@a0000000 {
+		compatible = "wokoo,wokoo-dma";
+		reg = <0xa0000000 0x2000>;
+		interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_CLK_AP_DMAG>,
+			 <&clks WOKOO_CLK_AP_DMA_BUS>,
+			 <&clks WOKOO_CLK_DMA_AXI>;
+		clock-names = "dmag", "dma_bus", "axi_bus";
+		resets = <&clks WOKOO_RST_AP_DMAG>;
+		reset-names = "reset";
+		#dma-cells = <4>;
+		wokoo,mem2mem;
+	};
+
+	pwm0: pwm@a0147000 {
+		compatible = "wokoo,wokoo-pwm";
+		reg = <0xa0147000 0x10>;
+		clocks = <&clks WOKOO_PCLK_PWM>,
+			<&clks WOKOO_MCLK_PWM>,
+			<&clks WOKOO_SCLK_PWM>;
+		clock-names = "pclk", "mclk", "sclk";
+		status = "disabled";
+	};
+	
+	pwm1: pwm@a0147040 {
+		compatible = "wokoo,wokoo-pwm";
+		reg = <0xa0147040 0x10>;
+		clocks = <&clks WOKOO_PCLK_PWM>,
+			<&clks WOKOO_MCLK_PWM>,
+			<&clks WOKOO_SCLK_PWM>;
+		clock-names = "pclk", "mclk", "sclk";
+		status = "disabled";
+	};
+
+	usb_otg: usb@0xa0300000 {
+		compatible = "wokoo,wokoo-udc", "snps,dwc2";
+		reg = <0xa0300000 0x40000>,		
+		      <0xa0060150 0x8>;
+		reg-names = "usb_otg", "usb_supend";		
+		interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_USBOTG>,
+				<&clks WOKOO_CLK_USBOTG_12M>;
+		clock-names = "otg", "otg_12m";
+		dr_mode = "otg";
+		g-np-tx-fifo-size = <16>;
+		g-rx-fifo-size = <275>;
+		g-tx-fifo-size = <256 128 128 64 64 32>;
+		g-use-dma;
+		status = "disabled";
+	};
+
+	sm4: sm4@0xa2048000 {
+		compatible = "wokoo,wokoo-sm4";
+		//reg = <0xa2010000 0x40000>;
+		reg = <0xa2048000 0x8000>;
+		interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+					 <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_UAC>,
+				 <&clks WOKOO_CLK_UAC_SM4>,
+				 <&clks WOKOO_CLK_UAC_SM3>,	
+				 <&clks WOKOO_CLK_UAC_PKI>,
+				 <&clks WOKOO_CLK_UAC_HRNG>,
+				 <&clks WOKOO_CLK_UAC_ALG>,
+				 <&clks WOKOO_SCLK_UAC_SUB>;			 
+		clock-names = "hclk", "sm4_clk", "sm3_clk", "pki_clk", "hrng_clk", "alg_clk", "sclk";
+		//clock-names = "hclk", "sm4_clk", "alg_clk", "sclk";
+		status = "disabled";
+	};
+
+	sm3: sm3@0xa2040000 {
+		compatible = "wokoo,wokoo-sm3";
+		//reg = <0xa2010000 0x40000>;
+		reg = <0xa2040000 0x8000>;
+		interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+					 <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_UAC>,
+				 <&clks WOKOO_CLK_UAC_SM4>,
+				 <&clks WOKOO_CLK_UAC_SM3>,	
+				 <&clks WOKOO_CLK_UAC_PKI>,
+				 <&clks WOKOO_CLK_UAC_HRNG>,
+				 <&clks WOKOO_CLK_UAC_ALG>,
+				 <&clks WOKOO_SCLK_UAC_SUB>;			 
+		clock-names = "hclk", "sm4_clk", "sm3_clk", "pki_clk", "hrng_clk", "alg_clk", "sclk";
+		//clock-names = "hclk", "sm4_clk", "alg_clk", "sclk";
+		status = "disabled";
+	};
+
+	sm2: sm2@0xa2020000 {
+		compatible = "wokoo,wokoo-sm2";
+		//reg = <0xa2010000 0x40000>;
+		reg = <0xa2020000 0x8000>;
+		interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+					 <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_UAC>,
+				 <&clks WOKOO_CLK_UAC_SM4>,
+				 <&clks WOKOO_CLK_UAC_SM3>,	
+				 <&clks WOKOO_CLK_UAC_PKI>,
+				 <&clks WOKOO_CLK_UAC_HRNG>,
+				 <&clks WOKOO_CLK_UAC_ALG>,
+				 <&clks WOKOO_SCLK_UAC_SUB>;			 
+		clock-names = "hclk", "sm4_clk", "sm3_clk", "pki_clk", "hrng_clk", "alg_clk", "sclk";
+		//clock-names = "hclk", "sm4_clk", "alg_clk", "sclk";
+		status = "disabled";
+	};
+
+	hrng: hrng@0xa2018000 {
+		compatible = "wokoo,wokoo-hrng";
+		//reg = <0xa2010000 0x40000>;
+		reg = <0xa2018000 0x8000>;
+		interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+					 <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_UAC>,
+				 <&clks WOKOO_CLK_UAC_SM4>,
+				 <&clks WOKOO_CLK_UAC_SM3>,	
+				 <&clks WOKOO_CLK_UAC_PKI>,
+				 <&clks WOKOO_CLK_UAC_HRNG>,
+				 <&clks WOKOO_CLK_UAC_ALG>,
+				 <&clks WOKOO_SCLK_UAC_SUB>; 
+		clock-names = "hclk", "sm4_clk", "sm3_clk", "pki_clk", "hrng_clk", "alg_clk", "sclk";
+		//clock-names = "hclk", "sm4_clk", "alg_clk", "sclk";
+		status = "disabled";
+	};
+
+	aes: aes@0xa4000000 {
+		compatible = "wokoo,wokoo-aes";
+		reg = <0xa4000000 0x800>;
+		//interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_CIPHER>;
+		clock-names = "hclk";
+		status = "disabled";
+	};
+
+	sha: sha@0xa4000800 {
+		compatible = "wokoo,wokoo-sha";
+		reg = <0xa4000800 0x800>;
+		//interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clks WOKOO_HCLK_CIPHER>;
+		clock-names = "hclk";
+		status = "disabled";
+	};
+};

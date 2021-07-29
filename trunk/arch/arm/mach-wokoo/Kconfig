@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Copyright (c) 2020 Codefair Semiconductor Technology Co., Ltd.
+#		http://www.codefairsemi.com
+
+# Configuration options for the WOKOO
+
+config ARCH_WOKOO
+	bool "code fair WOKOO"
+	depends on ARCH_MULTI_V7
+	select ARCH_HAS_HOLES_MEMORYMODEL
+	select ARM_GIC
+	select CLKSRC_WOKOO_PWM
+	select COMMON_CLK_WOKOO
+	select CLKSRC_WOKOO_APT
+	select GPIOLIB
+	select HAVE_WOKOO_I2C if I2C
+	select HAVE_WOKOO_WATCHDOG if WATCHDOG
+	select HAVE_WOKOO_RTC if RTC_CLASS
+	select PINCTRL
+	select PINCTRL_WOKOO
+	help
+	  CodeFair WOKOO series based systems
+
+if ARCH_WOKOO
+
+config CPU_WOKOO
+	def_bool y
+	select AP_DMAG if DMADEVICES
+	help
+	  Enable WOKOO CPU support
+
+endif
