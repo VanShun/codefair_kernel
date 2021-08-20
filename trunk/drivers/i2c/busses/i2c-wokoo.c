@@ -212,18 +212,23 @@ static  void  wokoo_i2c_queue_read_data(struct wokoo_i2c_dev *i2c,struct i2c_msg
 	int i = 0;
 	int length = 0;
 	unsigned int data;
+
+    //printk("---debug wokoo_i2c_queue_read_data (%d)\n", msg->len);
     sef_len = msg->len % 4;
 	len = msg->len /4;
 	while (len > 0)
 	{  
 		data = readl(i2c->regs + wokoo_I2C_QUEUE_DATA(i2c));
+        //printk("---debug msg->buf:");
     	for (i = 0; i < 4 ; i ++)
         {
 			msg->buf[length ++] = data & 0xff;
 			data >>= 8;
+            //printk(" %x", msg->buf[length - 1]);
      	}
-	
+	    
 		len -= 1;
+        msleep(1);
 	}	
 	
 	if (sef_len)
@@ -946,10 +951,11 @@ static int wokoo_i2c_get_ofdata(struct wokoo_i2c_dev *i2c)
 	ret = of_property_read_u32(node, "mode", &i2c->mode);
 	if (ret) {
 		dev_warn(dev, " I2C mode select failed\n");
+        i2c->mode = 0;
 	}
-	else{
-		i2c->mode = 0;
-	}
+	//else{
+	//	i2c->mode = 0;
+	//}
 	wokoo_i2c_derive_timing(i2c, speed);
 
 	return 0;

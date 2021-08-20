@@ -20,6 +20,10 @@
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
 
+#ifndef DEBUG
+#define DEBUG
+#endif
+
 struct pwm_bl_data {
 	struct pwm_device	*pwm;
 	struct device		*dev;
@@ -69,6 +73,7 @@ static void pwm_backlight_power_off(struct pwm_bl_data *pb)
 {
 	struct pwm_state state;
 
+    printk("----debug pwm_backlight_power_off \n");
 	pwm_get_state(pb->pwm, &state);
 	if (!pb->enabled)
 		return;
@@ -112,6 +117,7 @@ static int pwm_backlight_update_status(struct backlight_device *bl)
 	int brightness = bl->props.brightness;
 	struct pwm_state state;
 
+    printk("----- debug bl->props.brightness:%d-----\n", brightness);
 	if (bl->props.power != FB_BLANK_UNBLANK ||
 	    bl->props.fb_blank != FB_BLANK_UNBLANK ||
 	    bl->props.state & BL_CORE_FBBLANK)
@@ -120,6 +126,7 @@ static int pwm_backlight_update_status(struct backlight_device *bl)
 	if (pb->notify)
 		brightness = pb->notify(pb->dev, brightness);
 
+    printk("----- debug pwm_backlight_update_status brightness:%d-----\n", brightness);
 	if (brightness > 0) {
 		pwm_get_state(pb->pwm, &state);
 		state.duty_cycle = compute_duty_cycle(pb, brightness);
@@ -428,16 +435,26 @@ static int pwm_backlight_initial_power_state(const struct pwm_bl_data *pb)
 	 */
 
 	/* if the enable GPIO is disabled, do not enable the backlight */
-	if (pb->enable_gpio && gpiod_get_value_cansleep(pb->enable_gpio) == 0)
-		return FB_BLANK_POWERDOWN;
+	//if (pb->enable_gpio && (gpiod_get_value_cansleep(pb->enable_gpio) == 0))
+	if (pb->enable_gpio) {
+        if (gpiod_get_value_cansleep(pb->enable_gpio) == 0) {
+            printk("gpiod_get_value_cansleep:%d---- \n", gpiod_get_value_cansleep(pb->enable_gpio));
+            return FB_BLANK_POWERDOWN;
+        }
+    }
 
 	/* The regulator is disabled, do not enable the backlight */
-	if (!regulator_is_enabled(pb->power_supply))
+	if (!regulator_is_enabled(pb->power_supply)) {
+        printk("----debug regulator_is_enabled----\n");
 		return FB_BLANK_POWERDOWN;
+    }
+
 
 	/* The PWM is disabled, keep it like this */
-	if (!pwm_is_enabled(pb->pwm))
+	if (!pwm_is_enabled(pb->pwm)) {
+        printk("----debug !pwm_is_enabled----\n");
 		return FB_BLANK_POWERDOWN;
+    }
 
 	return FB_BLANK_UNBLANK;
 }
@@ -454,7 +471,10 @@ static int pwm_backlight_probe(struct platform_device *pdev)
 	unsigned int i;
 	int ret;
 
+    printk("debug ------ pwm_backlight_probe ------\n");
+    dev_dbg(&pdev->dev, "----debug pwm_backlight_probe---\n");
 	if (!data) {
+        dev_dbg(&pdev->dev, "----debug pwm_backlight_probe data null ,get from parsedt----\n");
 		ret = pwm_backlight_parse_dt(&pdev->dev, &defdata);
 		if (ret < 0) {
 			dev_err(&pdev->dev, "failed to find platform data\n");
@@ -463,7 +483,7 @@ static int pwm_backlight_probe(struct platform_device *pdev)
 
 		data = &defdata;
 	}
-
+    dev_dbg(&pdev->dev, "----debug pwm_backlight_probe data---\n");
 	if (data->init) {
 		ret = data->init(&pdev->dev);
 		if (ret < 0)
@@ -519,7 +539,7 @@ static int pwm_backlight_probe(struct platform_device *pdev)
 	if (pb->enable_gpio &&
 	    gpiod_get_direction(pb->enable_gpio) != 0)
 		gpiod_direction_output(pb->enable_gpio, 1);
-
+    //gpiod_set_raw_value(pb->enable_gpio, 1);
 	pb->power_supply = devm_regulator_get(&pdev->dev, "power");
 	if (IS_ERR(pb->power_supply)) {
 		ret = PTR_ERR(pb->power_supply);
@@ -543,6 +563,9 @@ static int pwm_backlight_probe(struct platform_device *pdev)
 	dev_dbg(&pdev->dev, "got pwm for backlight\n");
 
 	/* Sync up PWM state. */
+    
+    memset(&state, 0, sizeof(struct pwm_state));
+    //state.enabled = true;
 	pwm_init_state(pb->pwm, &state);
 
 	/*
@@ -639,6 +662,7 @@ static int pwm_backlight_probe(struct platform_device *pdev)
 
 	bl->props.brightness = data->dft_brightness;
 	bl->props.power = pwm_backlight_initial_power_state(pb);
+    printk("-----debug bl->props.power %d - initialization done\n", bl->props.power);
 	backlight_update_status(bl);
 
 	platform_set_drvdata(pdev, bl);

@@ -113,7 +113,8 @@ static void wokoofb_turn_on_bl(struct wokoofb_info  *fbi)
 **/
 static void wokoofb_turn_off_bl(struct wokoofb_info  *fbi)
 {
-	/*turn off backlight*/
+    printk("----wokoofb_turn_off_bl---\n");
+    /*turn off backlight*/
 	if (fbi && fbi ->backlight)
 	{
 		fbi ->backlight->props.power=FB_BLANK_POWERDOWN;
@@ -284,15 +285,16 @@ static int wokoofb_set_par(struct fb_info *info)
 	if (24 == info->var.bits_per_pixel 
 	|| 32 == info->var.bits_per_pixel) 
 	{
-		info->var.red.offset = 16;
+        info->var.red.offset = 0;
 		info->var.red.length = 8;
 		info->var.red.msb_right = 0;
 		info->var.green.offset = 8;
 		info->var.green.length = 8;
 		info->var.green.msb_right = 0;
-		info->var.blue.offset = 0;
+		info->var.blue.offset = 16;
 		info->var.blue.length = 8;
 		info->var.blue.msb_right = 0;
+
 		//info->fix.line_length = info->var.xres_virtual << 2;
 		fbi->cfg_win0_fmt = DPI_WOKOO_RGB8888;
 		fbi->cfg_color_dep = DPI_WOKOO_DEP_RGB888;
@@ -607,6 +609,8 @@ static int wokoofb_suspend(struct device *dev)
 {
     struct fb_info	*data = dev_get_drvdata(dev);
 	struct wokoofb_info *fbi  = data->par ;
+
+    printk("----debug wokoofb_suspend ---\n");
 	if (true == fbi ->issuspend)
     {
         return 0;
@@ -655,6 +659,7 @@ static void wokoofb_lcdfb_task(struct work_struct *work)
 		container_of(work, struct wokoofb_info, task);
 	 if (fbi && fbi->rst)
      {
+         printk("---debug wokoofb_lcdfb_task rst\n");
 		 wokoo_disable_ctrl(fbi->info);
 		 wokoo_rst_ctrl(fbi);
 		 wokoofb_set_par(fbi->info);
@@ -672,6 +677,9 @@ static int wokoofb_probe(struct platform_device *pdev)
 	struct fb_info *info;
 	struct resource *res;
 	int ret;
+    u32 lcdc_ctrl;
+    
+    printk("----debug wokoofb_probe\n");
 	info = framebuffer_alloc(sizeof(struct wokoofb_info), &pdev->dev);
 	if (NULL == info)
 	{
@@ -687,9 +695,7 @@ static int wokoofb_probe(struct platform_device *pdev)
 			dev_err(&pdev->dev, "cannot get dt configuration\n");
 		    goto free_info;
 		}
-	}
-	else
-	{
+	} else {
 		dev_err(&pdev->dev, "cannot get dt  configuration\n");
 		ret = -ENODEV;
 		goto free_info;	
@@ -719,6 +725,7 @@ static int wokoofb_probe(struct platform_device *pdev)
 	
 	/* interrupt */
 	fbi->irq = platform_get_irq(pdev, 0);
+    printk("---debug wokoofb irq :%d", fbi->irq);
 	if (fbi->irq < 0) 
 	{
 		dev_err(&pdev->dev, "unable to get irq\n");
@@ -732,7 +739,10 @@ static int wokoofb_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "request_irq failed: %d\n", ret);
 		goto free_info;
 	}
-	
+
+    lcdc_ctrl = readl(fbi ->regs + LCDC_GCTRL_ADDR);
+    printk("----debug lcdc_ctrl: %x\n", lcdc_ctrl);
+   // write_reg(lcdc_ctrl | (1 << 15), fbi ->regs + LCDC_GCTRL_ADDR);
 	/* clk init*/
 	fbi->clk_ipg = devm_clk_get(&pdev->dev, "lcdc");
 	if (IS_ERR(fbi->clk_ipg)) 

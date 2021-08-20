@@ -596,7 +596,7 @@ static int wokoo_lcdc_suspend(struct device *dev)
 static int wokoo_lcdc_resume(struct device *dev)
 {
 	struct wokoo_lcdc_info  *lcdci = dev_get_drvdata(dev);
-	Lcd_Initialize_l();
+	//Lcd_Initialize_l();
 	//wokoo_lcdc_init(lcdci);
 	return 0;
 }
@@ -735,7 +735,7 @@ static int wokoo_lcdc_probe(struct platform_device *pdev)
 
 	//init spi screen  
 	
-	Lcd_Initialize_l();
+	//Lcd_Initialize_l();
 	//msleep(100);
 	
 	#if 0
