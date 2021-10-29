@@ -24,6 +24,10 @@ config LOGO_LINUX_VGA16
 	bool "Standard 16-color Linux logo"
 	default y
 
+config LOGO_CUSTOM_CLUT224
+    bool "224-color CUSTOM Linux logo"
+    default y
+	
 config LOGO_LINUX_CLUT224
 	bool "Standard 224-color Linux logo"
 	default y

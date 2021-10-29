@@ -53,6 +53,7 @@ const struct linux_logo * __ref fb_find_logo(int depth)
 		/* Generic Linux logo */
 		logo = &logo_linux_mono;
 #endif
+
 #ifdef CONFIG_LOGO_SUPERH_MONO
 		/* SuperH Linux logo */
 		logo = &logo_superh_mono;
@@ -75,6 +76,11 @@ const struct linux_logo * __ref fb_find_logo(int depth)
 		/* Generic Linux logo */
 		logo = &logo_linux_clut224;
 #endif
+#ifdef CONFIG_LOGO_CUSTOM_CLUT224
+        /* Custom Linux logo */
+        logo = &logo_custom_clut224;
+#endif
+
 #ifdef CONFIG_LOGO_DEC_CLUT224
 		/* DEC Linux logo on MIPS/MIPS64 or ALPHA */
 		logo = &logo_dec_clut224;
